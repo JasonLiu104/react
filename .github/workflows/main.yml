@@ -1,0 +1,66 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    env:
+      MY_SECRET   : ${{secrets.react_secret}}
+      USER_NAME   : JasonLiu104
+      USER_EMAIL  : jason.liu@104.com.tw
+      PUBLISH_DIR : ./build
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - name: Use Node.js (16.15.1)
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.15.1'
+          cache: 'npm'
+
+      - name: Install git 
+        run: sudo apt-get install git
+
+      # Runs a single command using the runners shell
+      - name: Init rep 
+        run: npm ci
+        
+      # Runs a set of commands using the runners shell
+      - name: Run test
+        run: npm run test
+
+      - name: Run build
+        run: npm run build
+
+      - name: Commit files
+        run: |
+          cd $PUBLISH_DIR
+          git init
+          git config --local user.name $USER_NAME
+          git config --local user.email $USER_EMAIL
+          git status
+          git remote add origin https://$MY_SECRET@github.com/JasonLiu104/react.git
+          git checkout -b gh-pages
+          git add --all
+          git commit -m "deploy to Github pages"
+          git push origin gh-pages -f
+          echo 🤘 deploy gh-pages complete.
